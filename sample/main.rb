@@ -80,6 +80,17 @@ module Blg
     :use_dev_attributes
   )
 
+  Version = Struct.new(
+    :id,
+    :projectId,
+    :name,
+    :description,
+    :startDate,
+    :releaseDueDate,
+    :archived,
+    :displayOrder
+  )
+
   module Api
     module Project
       def get_projects(params = {})
@@ -119,7 +130,38 @@ module Blg
             json_project['useDevAttributes']
           )
         end
+      end
 
+      def get_versions(project_id_or_key)
+        url = URI.parse('https://' + @hostname)
+ 
+        query_string = {'apiKey' => @api_key}
+        url.path = '/api/v2/projects/' + project_id_or_key.to_s + '/versions'
+        url.query = URI.encode_www_form(query_string)
+ 
+        http = Net::HTTP.new(url.host, url.port)
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+ 
+        req = Net::HTTP::Get.new(url.request_uri)
+        req['User-Agent'] = 'blg ' + Blg::VERSION
+        req['Accept'] = 'application/json'
+        res = http.request(req)
+        puts res.body
+ 
+        json_versions = JSON.parse(res.body)
+        json_versions.map do |json_version|
+          Blg::Version.new(
+            json_version['id'],
+            json_version['projectId'],
+            json_version['name'],
+            json_version['description'],
+            json_version['startDate'],
+            json_version['releaseDueDate'],
+            json_version['archived'],
+            json_version['displayOrder']
+          )
+        end
       end
     end
   end
@@ -143,7 +185,9 @@ module Blg
     :estimated_hours,
     :actual_hours,
     :parent_issue_id,
+    :created_user,
     :created,
+    :updated_user,
     :updated
   )
 
@@ -253,7 +297,37 @@ module Blg
             json_issue['estimatedHours'],
             json_issue['actualHours'],
             json_issue['parentIssueId'],
+            Blg::User.new(
+              json_issue['createdUser']['id'],
+              json_issue['createdUser']['userId'],
+              json_issue['createdUser']['name'],
+              json_issue['createdUser']['roleType'],
+              json_issue['createdUser']['lang'],
+              json_issue['createdUser']['mailAddress'],
+              Blg::NulabAccount.new(
+                json_issue['createdUser']['nulabAccount']['nulabId'],
+                json_issue['createdUser']['nulabAccount']['name'],
+                json_issue['createdUser']['nulabAccount']['uniqueId']
+              ),
+              json_issue['createdUser']['keyword'],
+              json_issue['createdUser']['lastLoginTime']
+            ),
             json_issue['created'],
+            Blg::User.new(
+              json_issue['updatedUser']['id'],
+              json_issue['updatedUser']['userId'],
+              json_issue['updatedUser']['name'],
+              json_issue['updatedUser']['roleType'],
+              json_issue['updatedUser']['lang'],
+              json_issue['updatedUser']['mailAddress'],
+              Blg::NulabAccount.new(
+                json_issue['updatedUser']['nulabAccount']['nulabId'],
+                json_issue['updatedUser']['nulabAccount']['name'],
+                json_issue['updatedUser']['nulabAccount']['uniqueId']
+              ),
+              json_issue['updatedUser']['keyword'],
+              json_issue['updatedUser']['lastLoginTime']
+            ),
             json_issue['updated']
           )
         end
@@ -277,7 +351,9 @@ module Blg
       @hostname = hostname
       @api_key = api_key
     end
+  end
 
+  class Client::Base
   end
 end
 
@@ -289,4 +365,5 @@ pp api.get_space
 pp api.get_projects
 pp api.get_projects({:archived => true})
 pp api.get_issues
+pp api.get_versions(ENV['BACKLOG_PEOJECT_ID'].to_i)
 
