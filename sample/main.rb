@@ -137,6 +137,7 @@ module Blg
     :resolution,
     :priority,
     :status,
+    :assignee,
     :start_date,
     :due_date,
     :estimated_hours,
@@ -165,6 +166,24 @@ module Blg
     :name,
     :color,
     :display_order
+  )
+
+  NulabAccount = Struct.new(
+    :nulab_id,
+    :name,
+    :unique_id
+  )
+
+  User = Struct.new(
+    :id,
+    :user_id,
+    :name,
+    :role_type,
+    :lang,
+    :mail_address,
+    :nulab_account,
+    :keyword,
+    :last_login_time
   )
 
   module Api
@@ -213,6 +232,21 @@ module Blg
               json_issue['status']['name'],
               json_issue['status']['color'],
               json_issue['status']['displayOrder'],
+            ),
+            Blg::User.new(
+              json_issue['assignee']['id'],
+              json_issue['assignee']['userId'],
+              json_issue['assignee']['name'],
+              json_issue['assignee']['roleType'],
+              json_issue['assignee']['lang'],
+              json_issue['assignee']['mailAddress'],
+              Blg::NulabAccount.new(
+                json_issue['assignee']['nulabAccount']['nulabId'],
+                json_issue['assignee']['nulabAccount']['name'],
+                json_issue['assignee']['nulabAccount']['uniqueId']
+              ),
+              json_issue['assignee']['keyword'],
+              json_issue['assignee']['lastLoginTime']
             ),
             json_issue['startDate'],
             json_issue['dueDate'],
