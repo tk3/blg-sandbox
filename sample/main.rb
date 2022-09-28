@@ -4,13 +4,6 @@ require 'net/http'
 require 'json'
 require 'dotenv'
 
-Dotenv.load
-
-hostname = ENV['BACKLOG_HOSTNAME']
-api_key = ENV['BACKLOG_API_KEY']
-
-#url = URI.parse('http://localhost:12345/api/v2/space')
-#api = Blg::Api.new('https://tk4.backlog.com')
 
 module Blg
   module Request
@@ -38,7 +31,7 @@ end
 module Blg
   module Api
     module Space
-      def get_space
+      def space
         get('/space')
       end
     end
@@ -48,11 +41,11 @@ end
 module Blg
   module Api
     module Project
-      def get_projects(params = {})
+      def projects(params = {})
         get('/projects')
       end
 
-      def get_versions(project_id_or_key)
+      def versions(project_id_or_key)
         get('/projects/' + project_id_or_key.to_s + '/versions')
       end
     end
@@ -62,7 +55,7 @@ end
 module Blg
   module Api
     module Issue
-      def get_issues(params = {})
+      def issues(params = {})
         get('/issues')
       end
     end
@@ -81,11 +74,9 @@ module Blg
     include Blg::Api::Project
     include Blg::Api::Issue
 
-    def initialize(hostname, api_key)
-      @hostname = hostname
+    def initialize(endpoint, api_key)
+      @endpoint = endpoint
       @api_key = api_key
-      @endpoint = 'https://' + @hostname + '/api/v2'
-      pp @endpoint
     end
   end
 
@@ -93,14 +84,20 @@ module Blg
   end
 end
 
-api = Blg::Client.new(hostname, api_key)
+
+Dotenv.load
+
+endpoint = ENV['BACKLOG_API_ENDPOINT']
+api_key = ENV['BACKLOG_API_KEY']
+
+api = Blg::Client.new(endpoint, api_key)
 
 require 'pp'
 
-pp api.get_space
-projects = api.get_projects
+pp api.space
+projects = api.projects
 pp projects
-pp api.get_projects({:archived => true})
-pp api.get_issues
-pp api.get_versions(projects[0]['id'])
+pp api.projects({:archived => true})
+pp api.issues
+pp api.versions(projects[0]['id'])
 
