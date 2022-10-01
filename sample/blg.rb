@@ -2,8 +2,6 @@
 
 require 'net/http'
 require 'json'
-require 'dotenv'
-
 
 module Blg
   module Request
@@ -65,6 +63,28 @@ module Blg
         get('/projects/' + project_id_or_key.to_s + '/categories')
       end
     end
+
+    module Status
+      def statuses(project_id_or_key)
+        get('/projects/' + project_id_or_key.to_s + '/statuses')
+      end
+    end
+
+    module IssueType
+      def issueTypes(project_id_or_key)
+        get('/projects/' + project_id_or_key.to_s + '/issueTypes')
+      end
+    end
+  end
+end
+
+module Blg
+  module Api
+    module Priority
+      def priorities(params = {})
+        get('/priorities')
+      end
+    end
   end
 end
 
@@ -75,6 +95,11 @@ module Blg
         get('/issues')
       end
     end
+  end
+end
+
+module Blg
+  module Api
   end
 end
 
@@ -90,7 +115,10 @@ module Blg
     include Blg::Api::Space
     include Blg::Api::Project
     include Blg::Api::Category
+    include Blg::Api::Status
+    include Blg::Api::IssueType
     include Blg::Api::Issue
+    include Blg::Api::Priority
 
     def initialize(endpoint, api_key)
       @endpoint = endpoint
@@ -101,21 +129,45 @@ module Blg
 end
 
 
-Dotenv.load
+if __FILE__ == $0
+  require 'dotenv'
+  Dotenv.load
 
-endpoint = ENV['BACKLOG_API_ENDPOINT']
-api_key = ENV['BACKLOG_API_KEY']
+  endpoint = ENV['BACKLOG_API_ENDPOINT']
+  api_key = ENV['BACKLOG_API_KEY']
 
-api = Blg::Client.new(endpoint, api_key)
+  api = Blg::Client.new(endpoint, api_key)
 
-require 'pp'
+  require 'pp'
 
-pp api.space
-projects = api.projects
-pp projects
-pp api.projects({:archived => true})
-pp api.issues
-pp api.versions(projects[0]['id'])
-pp api.categories(projects[0]['id'])
-pp api.users
+  puts "space --------"
+  pp api.space
+  projects = api.projects
+
+  puts "projects --------"
+  pp projects
+  pp api.projects({:archived => true})
+
+  puts "issues --------"
+  pp api.issues
+
+  puts "versions --------"
+  pp api.versions(projects[0]['id'])
+
+  puts "categories --------"
+  pp api.categories(projects[0]['id'])
+
+  puts "users --------"
+  pp api.users
+
+  puts "priorities --------"
+  pp api.priorities
+
+  puts "statuses--------"
+  pp api.statuses(projects[0]['id'])
+
+  puts "issueTypes --------"
+  pp api.issueTypes(projects[0]['id'])
+end
+
 
