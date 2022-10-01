@@ -40,6 +40,16 @@ end
 
 module Blg
   module Api
+    module User
+      def users
+        get('/users')
+      end
+    end
+  end
+end
+
+module Blg
+  module Api
     module Project
       def projects(params = {})
         get('/projects')
@@ -47,6 +57,12 @@ module Blg
 
       def versions(project_id_or_key)
         get('/projects/' + project_id_or_key.to_s + '/versions')
+      end
+    end
+
+    module Category
+      def categories(project_id_or_key)
+        get('/projects/' + project_id_or_key.to_s + '/categories')
       end
     end
   end
@@ -70,17 +86,17 @@ module Blg
 
   class Client
     include Blg::Request
+    include Blg::Api::User
     include Blg::Api::Space
     include Blg::Api::Project
+    include Blg::Api::Category
     include Blg::Api::Issue
 
     def initialize(endpoint, api_key)
       @endpoint = endpoint
       @api_key = api_key
     end
-  end
 
-  class Client::Base
   end
 end
 
@@ -100,4 +116,6 @@ pp projects
 pp api.projects({:archived => true})
 pp api.issues
 pp api.versions(projects[0]['id'])
+pp api.categories(projects[0]['id'])
+pp api.users
 
